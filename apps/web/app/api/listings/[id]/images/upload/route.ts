@@ -79,7 +79,8 @@ export async function POST(
 
     try {
         // Process and upload all
-        for (const [idx, item] of validFiles.entries()) {
+        for (let idx = 0; idx < validFiles.length; idx++) {
+            const item = validFiles[idx];
             const filename = generateUniqueFilename(listingId, timestamp, idx);
             const thumbnailFilename = `thumb-${filename}`;
 

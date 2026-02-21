@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const supabase = getServerClient();
     const searchParams = request.nextUrl.searchParams;
 
-    const params: ListingSearchParams = {
+    const params: ListingSearchParams & { bbox?: string } = {
       minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
       maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
       location: searchParams.get("location") || undefined,
@@ -16,23 +16,9 @@ export async function GET(request: NextRequest) {
       bathrooms: searchParams.get("bathrooms") ? Number(searchParams.get("bathrooms")) : undefined,
       amenities: searchParams.get("amenities")
         ? searchParams
-            .get("amenities")!
-            .split(",")
-            .map((a) => a.trim())
-        : undefined,
-      maxPrice: searchParams.get('maxPrice')
-        ? Number(searchParams.get('maxPrice'))
-        : undefined,
-      location: searchParams.get('location') || undefined,
-      radius: searchParams.get('radius') || undefined,
-      bedrooms: searchParams.get('bedrooms')
-        ? Number(searchParams.get('bedrooms'))
-        : undefined,
-      bathrooms: searchParams.get('bathrooms')
-        ? Number(searchParams.get('bathrooms'))
-        : undefined,
-      amenities: searchParams.get('amenities')
-        ? searchParams.get('amenities')!.split(',').map((a) => a.trim())
+          .get("amenities")!
+          .split(",")
+          .map((a) => a.trim())
         : undefined,
       search: searchParams.get('search') || undefined,
       bbox: searchParams.get('bbox') || undefined,
@@ -99,7 +85,7 @@ export async function GET(request: NextRequest) {
     // Bounding box filtering for map view
     if (params.bbox) {
       const coords = params.bbox.split(',').map(Number)
-      if (coords.length === 4 && coords.every((c) => !isNaN(c))) {
+      if (coords.length === 4 && coords.every((c: number) => !isNaN(c))) {
         const [west, south, east, north] = coords
         query = query
           .gte('longitude', west)
