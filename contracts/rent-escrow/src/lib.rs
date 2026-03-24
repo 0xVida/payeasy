@@ -1,13 +1,14 @@
 #![no_std]
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map};
 
+//RentEscrow defined already
 #[contracttype]
 #[derive(Clone)]
 pub enum DataKey {
     Landlord,
     TotalAmount,
-    Roommates,     // Map<Address, i128> - roommate address to required share
-    Contributions, // Map<Address, i128> - roommate address to paid share
+    Roommates,
+    Contributions,
     Deadline,
     IsReleased,
 }
@@ -25,8 +26,7 @@ impl RentEscrow {
         roommate_shares: Map<Address, i128>,
         deadline: u64,
     ) {
-        // TODO: Implement initialization logic
-        // Verify that the sum of roommate_shares equals total_amount
+        
     }
 
     /// Roommates call this to contribute their share of the rent
@@ -47,10 +47,7 @@ impl RentEscrow {
 
     /// Refund roommates if the deadline has passed and rent is not fully funded
     pub fn refund(env: Env, to: Address) {
-        // TODO: Implement refund logic
-        // 1. Verify deadline has passed
-        // 2. Verify total_amount was NOT reached
-        // 3. Refund 'to' their exact contribution
+
     }
 }
 

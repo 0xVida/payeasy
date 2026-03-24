@@ -8,7 +8,7 @@ fn test_initialize() {
     let env = Env::default();
     let contract_id = env.register_contract(None, RentEscrow);
     let client = RentEscrowClient::new(&env, &contract_id);
-
+    
     let landlord = Address::generate(&env);
     let total_amount = 1000;
     let mut roommate_shares = Map::new(&env);
