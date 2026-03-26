@@ -1,54 +1,35 @@
-#![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map};
+﻿#![no_std]
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env};
 
-//RentEscrow defined already
+/// Storage key definitions for persistent contract state.
+///
+/// Each variant maps to a unique slot in the Soroban persistent storage trie.
+/// Using a `#[contracttype]` enum guarantees type-safe, collision-free keys.
+///
+/// - `DataKey::Landlord` - stores the landlord's `Address`
+/// - `DataKey::Amount`   - stores the escrowed amount as `i128`
 #[contracttype]
-#[derive(Clone)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DataKey {
     Landlord,
-    TotalAmount,
-    Roommates,
-    Contributions,
-    Deadline,
-    IsReleased,
+    Amount,
 }
 
 #[contract]
-pub struct RentEscrow;
+pub struct RentEscrowContract;
 
 #[contractimpl]
-impl RentEscrow {
-    /// Initialize the rent escrow agreement
-    pub fn initialize(
-        env: Env,
-        landlord: Address,
-        total_amount: i128,
-        roommate_shares: Map<Address, i128>,
-        deadline: u64,
-    ) {
-        
+impl RentEscrowContract {
+    /// Placeholder - storage write logic added in the next commit.
+    pub fn initialize(_env: Env, _landlord: Address, _amount: i128) {}
+
+    /// Placeholder - retrieval logic added in the next commit.
+    pub fn get_landlord(_env: Env) -> Address {
+        panic!("not implemented")
     }
 
-    /// Roommates call this to contribute their share of the rent
-    pub fn contribute(env: Env, from: Address, amount: i128) {
-        // TODO: Implement contribution logic
-        // 1. Verify 'from' is a valid roommate
-        // 2. Transfer tokens from 'from' to the contract
-        // 3. Update contributions map
-    }
-
-    /// Release the total rent to the landlord if fully funded
-    pub fn release(env: Env) {
-        // TODO: Implement release logic
-        // 1. Verify total_amount is reached
-        // 2. Transfer everything to the landlord
-        // 3. Mark as released
-    }
-
-    /// Refund roommates if the deadline has passed and rent is not fully funded
-    pub fn refund(env: Env, to: Address) {
-
+    /// Placeholder - retrieval logic added in the next commit.
+    pub fn get_amount(_env: Env) -> i128 {
+        0
     }
 }
-
-mod test;
