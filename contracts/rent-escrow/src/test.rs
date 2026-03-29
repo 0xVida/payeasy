@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::{Address as _, Ledger}, token, Address, Env};
+use soroban_sdk::{symbol_short, testutils::{Address as _, Events, Ledger}, token, Address, Env, IntoVal};
 
 const TEST_DEADLINE: u64 = 2_000_000_000_u64;
 
@@ -245,4 +245,23 @@ fn test_initialize_accepts_min_rent() {
     env.mock_all_auths();
     // rent_amount exactly at MIN_RENT (100) must succeed
     client.initialize(&landlord, &token_address, &100_i128, &TEST_DEADLINE, &roommate_shares);
+}
+#[test]
+fn test_contribute_emits_event() {
+    let env = Env::default();
+    let (client, _, roommate_a, _, _, _) = setup_escrow(&env);
+
+    client.contribute(&roommate_a, &300_i128);
+
+    let events = env.events().all().all(); // First .all() returns ContractEvents, second .all() returns Vec
+    let last_event = events.last().unwrap();
+
+    assert_eq!(
+        last_event,
+        (
+            client.address.clone(),
+            (symbol_short!("deposit"), roommate_a).into_val(&env),
+            300_i128.into_val(&env)
+        )
+    );
 }

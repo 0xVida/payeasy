@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, contracterror, token, Address, Env, Map};
+use soroban_sdk::{contract, contractimpl, contracttype, contracterror, symbol_short, token, Address, Env, Map, Symbol};
 
 /// Minimum rent amount in stroops/token-units to prevent micro-escrow spam
 pub const MIN_RENT: i128 = 100;
@@ -160,6 +160,11 @@ impl RentEscrowContract {
 
         env.storage().persistent().set(&DataKey::Escrow, &escrow);
         env.storage().persistent().extend_ttl(&DataKey::Escrow, BUMP_THRESHOLD, BUMP_AMOUNT);
+
+        env.events().publish(
+            (symbol_short!("deposit"), from),
+            amount,
+        );
 
         Ok(())
     }
