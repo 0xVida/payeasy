@@ -138,7 +138,7 @@ async function loadFreighterClient(): Promise<FreighterClient> {
   }
 
   const mod = await import("@stellar/freighter-api");
-  const api = "default" in mod ? (mod as { default: typeof mod }).default : mod;
+  const api = "default" in mod ? (mod as unknown as { default: typeof mod }).default : mod;
 
   return {
     getAddress: api.getAddress,
