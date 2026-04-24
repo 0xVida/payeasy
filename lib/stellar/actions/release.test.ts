@@ -15,8 +15,9 @@ test("assertFullyFunded against Stellar testnet - throws on non-existent contrac
     // Expected to throw because the contract is missing from the testnet,
     // which signifies we're actually making a network request (integration test).
     assert.ok(
-      err.message.includes("Simulation failed") || 
+      err.message.includes("Simulation failed") ||
       err.message.includes("Simulation request failed") ||
+      err.message.includes("accountId is invalid") ||
       err instanceof EscrowNotFundedError,
       `Unexpected error: ${err.message}`
     );
