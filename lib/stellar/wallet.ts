@@ -70,6 +70,19 @@ export async function getPublicKey(): Promise<string | null> {
 }
 
 /**
+ * Returns the network Freighter is currently connected to (e.g. "TESTNET", "PUBLIC").
+ */
+export async function getFreighterNetwork(): Promise<string | null> {
+  try {
+    const result = await freighterApi.getNetwork();
+    if ("error" in result && result.error) return null;
+    return result.network || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Signs a transaction XDR using Freighter.
  */
 export async function signTx(xdr: string, network?: string): Promise<string | null> {

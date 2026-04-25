@@ -276,17 +276,17 @@ export interface ContractState {
 
 export async function getContractState(contractId: string): Promise<ContractState> {
   const { rpcServer, networkPassphrase } = await import("./config.ts");
-  const { TransactionBuilder, Address, Contract, scValToNative } = await import("@stellar/stellar-sdk");
+  const { TransactionBuilder, Account, Contract, Transaction, scValToNative, rpc } = await import("@stellar/stellar-sdk");
 
   const buildInvocationXdr = ({ contractId, method, args = [] }: BuildInvocationParams): string => {
     const contract = new Contract(contractId);
-    const source = new Address(contractId).toScAddress();
+    const source = new Account(contractId, "0");
 
     const tx = new TransactionBuilder(source, {
       fee: "100",
       networkPassphrase,
     })
-      .addOperation(contract.callFunction(method, ...args))
+      .addOperation(contract.call(method, ...(args as Parameters<typeof contract.call>[1][])  ))
       .setTimeout(60)
       .build();
 
@@ -295,19 +295,20 @@ export async function getContractState(contractId: string): Promise<ContractStat
 
   const ctx: QueryContext = {
     client: {
-      async simulateTransaction(xdr: string): Promise<SimulateTransactionResponse> {
+      async simulateTransaction(xdrString: string): Promise<SimulateTransactionResponse> {
         try {
-          const result = await rpcServer.simulateTransaction(xdr);
+          const tx = new Transaction(xdrString, networkPassphrase);
+          const result = await rpcServer.simulateTransaction(tx);
 
-          if (result.errorResult && result.errorResult.length > 0) {
-            return { error: result.errorResult };
+          if (rpc.Api.isSimulationError(result)) {
+            return { error: result.error };
           }
 
           let retval: unknown = undefined;
-          if (result.result && result.result.retval) {
+          if (result.result?.retval) {
             try {
               retval = scValToNative(result.result.retval);
-            } catch (e) {
+            } catch {
               retval = result.result.retval.toString();
             }
           }
