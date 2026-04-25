@@ -67,7 +67,7 @@ export function DateInput({
         </span>
       </div>
 
-      <FieldError id={errorId} message={error} />
+      <FieldError id={errorId ?? `${id}-error`} message={error} />
     </div>
   );
 }

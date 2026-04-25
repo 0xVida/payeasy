@@ -11,7 +11,7 @@ type EnvSource = Partial<Record<RequiredPublicEnvVar, string | undefined>>;
 type EnvLogger = Pick<typeof console, "warn">;
 
 export function getMissingEnvVars(
-  env: EnvSource = process.env
+  env: EnvSource = process.env as EnvSource
 ): RequiredPublicEnvVar[] {
   return REQUIRED_PUBLIC_ENV_VARS.filter((key) => {
     const value = env[key];
@@ -20,7 +20,7 @@ export function getMissingEnvVars(
 }
 
 export function validateEnv(
-  env: EnvSource = process.env,
+  env: EnvSource = process.env as EnvSource,
   nodeEnv = process.env.NODE_ENV,
   logger: EnvLogger = console
 ): void {
