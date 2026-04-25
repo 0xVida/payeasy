@@ -224,6 +224,8 @@ fn test_share_sum_equals_rent_succeeds() {
     let contract_id = env.register(RentEscrowContract, ());
     let client = RentEscrowContractClient::new(&env, &contract_id);
     let landlord = Address::generate(&env);
+    let token_admin = Address::generate(&env);
+    let token_address = env.register_stellar_asset_contract_v2(token_admin.clone()).address();
     let mut shares = Map::new(&env);
     shares.set(Address::generate(&env), 600_i128);
     shares.set(Address::generate(&env), 400_i128);
@@ -299,6 +301,7 @@ fn test_full_flow_scenario() {
     let token_address = env
         .register_stellar_asset_contract_v2(token_admin.clone())
         .address();
+    let token_address = env.register_stellar_asset_contract_v2(token_admin.clone()).address();
     let token = token::Client::new(&env, &token_address);
     let token_admin_client = token::StellarAssetClient::new(&env, &token_address);
 
@@ -351,6 +354,7 @@ fn test_contribute_emits_event() {
 
     client.contribute(&roommate_a, &300_i128);
 
+    // Filter to events emitted by this contract only and verify one deposit event was emitted
     let contract_events = env.events().all().filter_by_contract(&client.address);
     assert_eq!(contract_events.events().len(), 1);
 }

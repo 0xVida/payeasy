@@ -3,18 +3,34 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, LogOut, Copy, Check, ChevronDown, ExternalLink, AlertCircle } from "lucide-react";
+import { Wallet, LogOut, Copy, Check, ChevronDown, ExternalLink, AlertCircle, Coins } from "lucide-react";
 import { useStellarAuth } from "@/context/StellarContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
+import { useWalletBalance } from "@/hooks/useWalletBalance";
 
 export default function ConnectWalletButton() {
   const { publicKey, isConnected, connect, disconnect, isConnecting, isFreighterInstalled, isRestoring, error } = useStellarAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [errorExpanded, setErrorExpanded] = useState(false);
+  const { balance, isLoading: isBalanceLoading } = useWalletBalance(publicKey, isOpen);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
+  const isMobile = useIsMobile();
 
   const truncatedKey = publicKey
     ? `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`
@@ -38,8 +54,9 @@ export default function ConnectWalletButton() {
     setShowConfirm(true);
   };
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside (desktop only)
   useEffect(() => {
+    if (isMobile) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -47,7 +64,7 @@ export default function ConnectWalletButton() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isMobile]);
 
   if (isRestoring) {
     return (
@@ -102,6 +119,40 @@ export default function ConnectWalletButton() {
     );
   }
 
+  const menuItems = (
+    <>
+      <button
+        onClick={handleCopy}
+        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-dark-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+      >
+        {copied ? (
+          <Check size={16} className="text-emerald-500" />
+        ) : (
+          <Copy size={16} />
+        )}
+        <span>{copied ? "Copied!" : "Copy Address"}</span>
+      </button>
+
+      <button
+        onClick={() => { setIsOpen(false); router.push("/connect"); }}
+        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-dark-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+      >
+        <ExternalLink size={16} />
+        <span>Wallet Dashboard</span>
+      </button>
+
+      <div className="h-px bg-white/5 my-1" />
+
+      <button
+        onClick={confirmDisconnect}
+        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors"
+      >
+        <LogOut size={16} />
+        <span>Disconnect</span>
+      </button>
+    </>
+  );
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -110,12 +161,43 @@ export default function ConnectWalletButton() {
       >
         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
         <span className="text-sm font-medium text-white font-mono">{truncatedKey}</span>
-        <ChevronDown 
-          size={16} 
-          className={`text-dark-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} 
+        <ChevronDown
+          size={16}
+          className={`text-dark-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
+      {/* Desktop dropdown */}
+      {!isMobile && (
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 5, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="absolute right-0 top-full z-50 w-48 mt-2 glass rounded-xl border border-white/10 shadow-2xl overflow-hidden"
+            >
+              <div className="p-1">
+                {menuItems}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {/* Mobile bottom sheet */}
+      {isMobile && (
+        <BottomSheet
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          title="Wallet"
+        >
+          <div className="p-1">
+            {menuItems}
+          </div>
+        </BottomSheet>
+      )}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -125,6 +207,19 @@ export default function ConnectWalletButton() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="absolute right-0 top-full z-50 w-48 mt-2 glass rounded-xl border border-white/10 shadow-2xl overflow-hidden"
           >
+            {/* Balance display */}
+            <div className="px-3 py-2 border-b border-white/5 mb-1">
+              <p className="text-[10px] text-dark-500 uppercase tracking-widest font-semibold mb-0.5">Balance</p>
+              {isBalanceLoading ? (
+                <div className="h-4 w-20 bg-dark-800/60 rounded animate-pulse" />
+              ) : (
+                <p className="text-sm font-mono text-white flex items-center gap-1.5">
+                  <Coins size={13} className="text-brand-400" />
+                  {balance ?? "—"} XLM
+                </p>
+              )}
+            </div>
+
             <div className="p-1">
               <button
                 onClick={handleCopy}
